@@ -15,8 +15,7 @@ import argparse
 import textwrap
 from datetime import date, timedelta
 
-from trending.github_api import fetch_trending_repos
-
+from trending.github_api import fetch_trending_repos, GitHubAPIError
 DURATION_TO_DAYS ={
     "day": 1,
     "week": 7,
@@ -44,7 +43,7 @@ def repo_from_api(item: dict[str,Any]) -> Repo:
     return Repo(name=item["full_name"], description=item.get("description"), stars=item["stargazers_count"], language=item.get("language"), url = item["html_url"],)
 
 def format_repo(index: int, repo: Repo) -> str:
-    description = textwrap.shorten(repo.description or "No description provided.", width = 170, placeholder="...")
+    description = repo.description or "No description provided."
     language = repo.language or "Unknown"
     stars = f"{repo.stars:,}"
 
@@ -65,6 +64,10 @@ def format_repo(index: int, repo: Repo) -> str:
 def main() -> None:
 
     args = parse_args()
+    if args.limit < 1 or args.limit > 100:
+        print("Error: --limit must be between 1 and 50")
+        raise SystemExit(1)
+
     duration_days =  DURATION_TO_DAYS[args.duration]
 
     since = date.today() - timedelta(days=duration_days)
@@ -72,7 +75,11 @@ def main() -> None:
 
     print(f"Fetching top {args.limit} trending repos (created after {since})...\n")
 
-    data = fetch_trending_repos(query=query, per_page=args.limit)
+    try:
+        data = fetch_trending_repos(query=query, per_page=args.limit)
+    except GitHubAPIError as exc:
+        print(f"Error: {exc}")
+        raise SystemExit(1)    
     items = data.get("items", [])
     repos = [repo_from_api(item) for item in items]
 
