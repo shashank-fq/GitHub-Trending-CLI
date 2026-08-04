@@ -8,8 +8,11 @@ here just to prove the whole pipeline works end to end:
 Run it with:
     python -m trending.main
 """
-import argparse
 
+from dataclasses import dataclass
+from typing import Any
+import argparse
+import textwrap
 from datetime import date, timedelta
 
 from trending.github_api import fetch_trending_repos
@@ -20,15 +23,44 @@ DURATION_TO_DAYS ={
     "month": 30,
     "year": 365,
 }
+
+@dataclass
+class Repo:
+    name: str
+    description: str | None
+    stars: int
+    language: str | None
+    url: str
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fetch GitHub reprositories created recently, sorted by stars.")
 
     parser.add_argument("--duration", choices=DURATION_TO_DAYS.keys(), default="week", help = "Time window to search within.",)
 
-    parser.add_argument("--limit", type = int, default= 10, help="Number of reprositories to show.",)
+    parser.add_argument("--limit", type = int, default= 10, help="Number of repositories to show.",)
 
     return parser.parse_args()
 
+def repo_from_api(item: dict[str,Any]) -> Repo:
+    return Repo(name=item["full_name"], description=item.get("description"), stars=item["stargazers_count"], language=item.get("language"), url = item["html_url"],)
+
+def format_repo(index: int, repo: Repo) -> str:
+    description = textwrap.shorten(repo.description or "No description provided.", width = 170, placeholder="...")
+    language = repo.language or "Unknown"
+    stars = f"{repo.stars:,}"
+
+    wrapped_description = textwrap.fill(
+        description,
+        width=90,
+        initial_indent="    ",
+        subsequent_indent="    ",
+    )
+
+    return(
+        f"{index:>2}, {repo.name}\n"
+        f"{wrapped_description}\n"
+        f"    Stars: {stars:<8} Language: {language}\n"
+        f"    {repo.url}"
+    )
 
 def main() -> None:
 
@@ -41,16 +73,16 @@ def main() -> None:
     print(f"Fetching top {args.limit} trending repos (created after {since})...\n")
 
     data = fetch_trending_repos(query=query, per_page=args.limit)
-    repos = data.get("items", [])
+    items = data.get("items", [])
+    repos = [repo_from_api(item) for item in items]
 
     if not repos:
         print("No repositories found.")
         return
 
     for i, repo in enumerate(repos, start=1):
-        name = repo["full_name"]
-        stars = repo["stargazers_count"]
-        print(f"{i}. {name} — ⭐ {stars:,}")
+        print(format_repo(i, repo))
+        print()
 
 
 if __name__ == "__main__":
