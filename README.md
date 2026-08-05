@@ -1,61 +1,161 @@
 # GitHub Trending CLI
 
-A command-line tool that shows trending GitHub repositories, built via the
-[GitHub Search API](https://docs.github.com/en/rest/search/search#search-repositories).
+`trending-repos` is a small command-line tool that finds GitHub repositories
+that are both recent and popular.
 
-> **Status: Phase 1 (MVP)** — fetches and prints the top 10 repos created in
-> the last 7 days, sorted by stars. No CLI arguments yet — those come in
-> Phase 2.
+It uses the GitHub Search API to:
 
-## Why "created + sorted by stars" instead of real trending?
+- filter repositories by creation date
+- sort them by stars
+- print a readable terminal view with name, description, stars, language, and URL
 
-GitHub doesn't expose an official trending API. The github.com/trending page
-is generated internally and isn't part of the public REST API. This tool
-approximates trending by searching for repos created within a time window,
-sorted by star count — which is the standard, documented way to build this
-kind of tool.
+## What "trending" means here
 
-## Setup
+GitHub does not provide an official public Trending API.
+
+This tool approximates trending by searching for repositories created within a
+recent time window and then sorting those repositories by star count. In other
+words:
+
+`trending = recently created + highly starred`
+
+That is why the tool uses a query like `created:>YYYY-MM-DD` instead of reading
+from `github.com/trending`.
+
+## Install
+
+From the project root:
 
 ```bash
-# from the project root
-python3 -m venv venv
-source venv/bin/activate       # on Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate
+pip install .
+```
+
+On Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install .
+```
+
+After installation, run:
+
+```bash
+trending-repos
+```
+
+## Usage
+
+Basic command:
+
+```bash
+trending-repos
+```
+
+This uses:
+
+- `--duration week`
+- `--limit 10`
+
+Available flags:
+
+- `--duration {day,week,month,year}`
+- `--limit N`
+
+Rules:
+
+- `--duration` defaults to `week`
+- `--limit` defaults to `10`
+- `--limit` must be between `1` and `100`
+
+## Usage Examples
+
+Default behavior:
+
+```bash
+trending-repos
+```
+
+Top 5 repositories created in the last day:
+
+```bash
+trending-repos --duration day --limit 5
+```
+
+Top 10 repositories created in the last week:
+
+```bash
+trending-repos --duration week --limit 10
+```
+
+Top 20 repositories created in the last month:
+
+```bash
+trending-repos --duration month --limit 20
+```
+
+Top 50 repositories created in the last year:
+
+```bash
+trending-repos --duration year --limit 50
+```
+
+Smallest valid limit:
+
+```bash
+trending-repos --duration week --limit 1
+```
+
+Largest valid limit:
+
+```bash
+trending-repos --duration month --limit 100
+```
+
+## Sample Output
+
+```text
+Fetching top 10 trending repos (created after 2026-07-29)...
+
+ 1, openai/example-repo
+    A clean example project showing how to build a terminal tool that searches
+    recently created GitHub repositories and formats the results nicely.
+    Stars: 12,483   Language: Python
+    https://github.com/openai/example-repo
+
+ 2, some-org/fast-tool
+    High-performance CLI for exploring interesting new repositories on GitHub.
+    Stars: 8,941    Language: Go
+    https://github.com/some-org/fast-tool
+```
+
+## Error Handling
+
+The tool fails gracefully for common problems:
+
+- invalid `--limit` values are rejected before any API call
+- network failures return a clear error message
+- GitHub API errors such as rate limits are reported without a Python stack trace
+- empty result sets print a friendly message instead of crashing
+
+## Development
+
+Install runtime dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Run it
+Run the tool without installing the command:
 
 ```bash
 python -m trending.main
 ```
 
-Expected output looks like:
+Run tests:
 
+```bash
+pytest
 ```
-Fetching top 10 trending repos (created after 2026-07-27)...
-
-1. some-org/some-repo — ⭐ 8,727
-2. another-org/another-repo — ⭐ 4,129
-...
-```
-
-## Project structure
-
-```
-trending-cli/
-├── trending/
-│   ├── __init__.py
-│   ├── github_api.py   # talks to the GitHub Search API
-│   └── main.py          # entry point (hardcoded params for now)
-├── requirements.txt
-└── README.md
-```
-
-## What's next
-
-- **Phase 2:** `--duration` and `--limit` CLI flags (day/week/month/year, custom result count)
-- **Phase 3:** cleaner data model + formatted output
-- **Phase 4:** real error handling (rate limits, timeouts, bad input)
-- **Phase 5:** tests with mocked HTTP responses
-- **Phase 6-7:** packaging as an installable `trending-repos` command + full docs
