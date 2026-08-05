@@ -1,4 +1,4 @@
-# GitHub Trending CLI
+# Trending Repos
 
 `trending-repos` is a small command-line tool that finds GitHub repositories
 that are both recent and popular.
