@@ -1,6 +1,6 @@
 # Trending Repos
 
-`trending-repos` https://github.com/shashank-fq/trending-repos is a small command-line tool that finds GitHub repositories
+`trending-repos` is a small command-line tool that finds GitHub repositories
 that are both recent and popular.
 
 It uses the GitHub Search API to:
@@ -159,3 +159,5 @@ Run tests:
 ```bash
 pytest
 ```
+
+This project was inspired from https://roadmap.sh/projects/github-trending-cli
