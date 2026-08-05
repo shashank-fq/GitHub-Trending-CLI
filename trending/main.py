@@ -61,6 +61,12 @@ def format_repo(index: int, repo: Repo) -> str:
         f"    {repo.url}"
     )
 
+
+def get_since_date(today: date, duration: str) -> date:
+    duration_days = DURATION_TO_DAYS[duration]
+    return today - timedelta(days=duration_days)
+
+
 def main() -> None:
 
     args = parse_args()
@@ -68,9 +74,7 @@ def main() -> None:
         print("Error: --limit must be between 1 and 50")
         raise SystemExit(1)
 
-    duration_days =  DURATION_TO_DAYS[args.duration]
-
-    since = date.today() - timedelta(days=duration_days)
+    since = get_since_date(date.today(), args.duration)
     query = f"created:>{since.isoformat()}"
 
     print(f"Fetching top {args.limit} trending repos (created after {since})...\n")

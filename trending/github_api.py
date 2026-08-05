@@ -76,4 +76,7 @@ def fetch_trending_repos(query: str, per_page: int = 10) -> dict:
     if response.status_code != 200:
         raise GitHubAPIError(f"GitHub API returned HTTP {response.status_code}.")
 
-    return response.json()
+    try:
+        return response.json()
+    except ValueError:
+        raise GitHubAPIError("GitHub returned malformed JSON.")
