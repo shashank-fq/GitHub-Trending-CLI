@@ -1,3 +1,11 @@
+Metadata-Version: 2.4
+Name: trending-repos
+Version: 0.1.0
+Summary: CLI tool for discovering trending GitHub repositories
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: requests==2.32.3
+
 # GitHub Trending CLI
 
 A command-line tool that shows trending GitHub repositories, built via the

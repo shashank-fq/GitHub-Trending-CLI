@@ -1,0 +1,2 @@
+[console_scripts]
+trending-repos = trending.main:main
